@@ -5,6 +5,6 @@ export default defineConfig({
     schema: "./src/domain/models/**/*.model.ts",
     out: "./src/infraestructure/db/migrations",
     dbCredentials: {
-        url: Bun.env.DATABASE_URL!,
+        url: process.env.DATABASE_URL!,
     },
 });

@@ -18,4 +18,4 @@ EXPOSE 3000
 
 # Comando para iniciar la aplicación
 # Ejecuta las migraciones primero y luego inicia el servidor
-CMD bunx drizzle-kit push --config=src/infraestructure/db/drizzle.config.ts && bun run index.ts
+CMD bunx drizzle-kit push --config=src/infraestructure/db/drizzle.config.ts --force && bun run index.ts
