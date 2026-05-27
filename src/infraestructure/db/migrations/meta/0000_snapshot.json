@@ -1,5 +1,5 @@
 {
-  "id": "5983668b-c779-4332-96ab-902656111396",
+  "id": "095da247-854e-44eb-88c0-b18c11f7e0cf",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -36,8 +36,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.usuarios_nfc": {
-      "name": "usuarios_nfc",
+    "public.nfc_keys": {
+      "name": "nfc_keys",
       "schema": "",
       "columns": {
         "id": {
@@ -49,12 +49,6 @@
         "uid": {
           "name": "uid",
           "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "nombre": {
-          "name": "nombre",
-          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true
         },
@@ -70,8 +64,8 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "usuarios_nfc_uid_unique": {
-          "name": "usuarios_nfc_uid_unique",
+        "nfc_keys_uid_unique": {
+          "name": "nfc_keys_uid_unique",
           "nullsNotDistinct": false,
           "columns": [
             "uid"

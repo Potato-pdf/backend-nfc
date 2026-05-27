@@ -6,11 +6,17 @@ mock.module("../src/aplication/controller", () => ({
         if (uid === "VALID-UID-1234") {
             return { 
                 success: true, 
-                message: "Acceso permitido para el usuario: Test User", 
-                user: { id: "0000-0000-0000-0000", uid: "VALID-UID-1234", nombre: "Test User", fechaCreacion: new Date().toISOString() } 
+                message: "Acceso permitido para UID: VALID-UID-1234", 
+                nfcKey: { id: "0000-0000-0000-0000", uid: "VALID-UID-1234", fechaCreacion: new Date().toISOString() } 
             };
         }
-        return { success: false, message: `Acceso denegado para UID: ${uid}`, user: null };
+        return { success: false, message: `Acceso denegado para UID: ${uid}`, nfcKey: null };
+    },
+    registerNfcKey: async (uid: string) => {
+        if (uid === "ALREADY-EXISTS") {
+            return { success: false, message: "El UID ALREADY-EXISTS ya está registrado." };
+        }
+        return { success: true, message: `UID ${uid} registrado exitosamente.` };
     }
 }));
 
@@ -29,8 +35,7 @@ describe("NFC API Integracion C# - Pruebas", () => {
         
         const data = await res.json() as any;
         expect(data.success).toBe(true);
-        expect(data.user).not.toBeNull();
-        expect(data.user.nombre).toBe("Test User");
+        expect(data.nfcKey).not.toBeNull();
     });
 
     test("POST /api/scan - UID invalido debe devolver 403 y acceso denegado", async () => {
@@ -44,7 +49,7 @@ describe("NFC API Integracion C# - Pruebas", () => {
         
         const data = await res.json() as any;
         expect(data.success).toBe(false);
-        expect(data.user).toBeNull();
+        expect(data.nfcKey).toBeNull();
     });
 
     test("POST /api/scan - Falta UID en el body debe devolver 400", async () => {
@@ -60,17 +65,30 @@ describe("NFC API Integracion C# - Pruebas", () => {
         expect(data.error).toBe("UID es requerido");
     });
 
-    test("POST /api/scan - JSON invalido debe devolver 400", async () => {
-        const req = new Request("http://localhost/api/scan", {
+    test("POST /api/register - Registro exitoso", async () => {
+        const req = new Request("http://localhost/api/register", {
             method: "POST",
-            body: "invalid-json{"
+            body: JSON.stringify({ uid: "NEW-UID" })
         });
         
         const res = await appFetch(req);
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(201);
         
         const data = await res.json() as any;
-        expect(data.error).toBe("Invalid JSON");
+        expect(data.success).toBe(true);
+    });
+
+    test("POST /api/register - Registro fallido por duplicado", async () => {
+        const req = new Request("http://localhost/api/register", {
+            method: "POST",
+            body: JSON.stringify({ uid: "ALREADY-EXISTS" })
+        });
+        
+        const res = await appFetch(req);
+        expect(res.status).toBe(409);
+        
+        const data = await res.json() as any;
+        expect(data.success).toBe(false);
     });
 
     test("Ruta no encontrada - 404", async () => {

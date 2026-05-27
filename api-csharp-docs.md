@@ -39,11 +39,10 @@ Ocurre cuando el `uid` existe en la base de datos de claves permitidas.
 ```json
 {
   "success": true,
-  "message": "Acceso permitido para el usuario: Juan Perez",
-  "user": {
+  "message": "Acceso permitido para UID: 12:34:56:78",
+  "nfcKey": {
     "id": "e8e12345-1234-5678-abcd-e8e123456789",
     "uid": "12:34:56:78",
-    "nombre": "Juan Perez",
     "fechaCreacion": "2026-05-27T00:00:00.000Z"
   }
 }
@@ -57,7 +56,7 @@ Ocurre cuando el `uid` se envía correctamente, pero no está registrado en el s
 {
   "success": false,
   "message": "Acceso denegado para UID: AA:BB:CC:DD",
-  "user": null
+  "nfcKey": null
 }
 ```
 
@@ -69,6 +68,74 @@ Ocurre si el payload enviado está malformado o le falta el campo `uid`.
 {
   "error": "UID es requerido"
 }
+```
+
+---
+
+### `POST /api/register`
+
+Registra un nuevo UID (llave, tarjeta o llavero NFC) en la base de datos para que sea considerado como válido en los escaneos futuros.
+
+- **URL:** `http://<IP-DEL-SERVIDOR>:3000/api/register`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+
+#### Body Request (JSON)
+
+```json
+{
+  "uid": "NUEVO-UID-1234"
+}
+```
+
+#### Respuestas Esperadas
+
+**1. Registro Exitoso (HTTP Status `201 Created`)**
+
+```json
+{
+  "success": true,
+  "message": "UID NUEVO-UID-1234 registrado exitosamente."
+}
+```
+
+**2. Conflicto - Ya Registrado (HTTP Status `409 Conflict`)**
+
+```json
+{
+  "success": false,
+  "message": "El UID NUEVO-UID-1234 ya está registrado."
+}
+```
+
+---
+
+## Ejemplos de Prueba (cURL)
+
+Puedes probar que el servidor está arriba y respondiendo correctamente ejecutando estos comandos desde cualquier terminal:
+
+**Probar un acceso denegado (UID no registrado):**
+```bash
+curl -X POST https://backend-nfc-lo1t.onrender.com/api/scan \
+  -H "Content-Type: application/json" \
+  -d '{"uid": "test-uid-falso"}'
+```
+*Respuesta esperada:* `{"success":false,"message":"Acceso denegado para UID: test-uid-falso","user":null}`
+
+**Probar un acceso válido:**
+*(Asegúrate de cambiar "CLAVE-REAL" por un UID que hayas insertado en la base de datos)*
+```bash
+curl -X POST https://backend-nfc-lo1t.onrender.com/api/scan \
+  -H "Content-Type: application/json" \
+  -d '{"uid": "CLAVE-REAL"}'
+```
+
+**Registrar una nueva tarjeta:**
+```bash
+curl -X POST https://backend-nfc-lo1t.onrender.com/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"uid": "NUEVO-LLAVERO-XYZ"}'
 ```
 
 ---
@@ -87,7 +154,7 @@ using System.Threading.Tasks;
 public class NfcService
 {
     private readonly HttpClient _httpClient;
-    private readonly string _apiUrl = "http://localhost:3000/api/scan"; // Cambiar por IP real
+    private readonly string _apiUrl = "https://backend-nfc-lo1t.onrender.com/api/scan";
 
     public NfcService()
     {
@@ -134,5 +201,5 @@ public class NfcService
 
 El backend guarda y verifica automáticamente la información en PostgreSQL utilizando las siguientes estructuras (gestionadas por el Backend):
 
-- **Tabla `usuarios_nfc`**: Almacena `id` (UUID), `uid` (string único del NFC), `nombre` y `fecha_creacion`.
+- **Tabla `nfc_keys`**: Almacena `id` (UUID), `uid` (string único del NFC) y `fecha_creacion`.
 - **Tabla `logs`**: Almacena `id` (UUID), `mensaje` (string describiendo el evento de escaneo) y `fecha_creacion`. Todo escaneo a `/api/scan` genera un registro aquí, sea válido o no.
