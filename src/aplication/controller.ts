@@ -2,8 +2,9 @@ import { db } from "../infraestructure/conection.db";
 import { uuidModel } from "../domain/models/uuid.model";
 import { logsModel } from "../domain/models/logs.model";
 import { eq } from "drizzle-orm";
+import type { NfcScanResponse } from "../domain/types/nfc.types";
 
-export const handleNfcScan = async (uid: string) => {
+export const handleNfcScan = async (uid: string): Promise<NfcScanResponse> => {
     try {
         const users = await db.select().from(uuidModel).where(eq(uuidModel.uid, uid));
         
@@ -15,17 +16,26 @@ export const handleNfcScan = async (uid: string) => {
             mensaje: message,
         });
 
+        // Aseguramos que la fechaCreacion sea un objeto Date si viene como string desde DB
+        let user = null;
+        if (isAuthorized) {
+            user = {
+                ...users[0],
+                fechaCreacion: users[0].fechaCreacion ? new Date(users[0].fechaCreacion) : null
+            };
+        }
+
         return {
             success: isAuthorized,
             message,
-            user: isAuthorized ? users[0] : null
+            user
         };
     } catch (error) {
         console.error("Error al procesar el escaneo NFC:", error);
         return {
             success: false,
             message: "Error interno del servidor",
-            error: error instanceof Error ? error.message : "Error desconocido"
+            user: null
         };
     }
 };
